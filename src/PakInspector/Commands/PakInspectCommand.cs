@@ -2,6 +2,7 @@
 using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
+using System.Text.Json;
 
 namespace PakInspector.Commands;
 
@@ -20,6 +21,10 @@ internal class PakInspectCommand : Command<PakInspectCommand.Settings>
         [Description("Display all file info")]
         [CommandOption("-a|--all")]
         public bool ShowAllInfo { get; init; }
+
+        [Description("Save inspection results")]
+        [CommandOption("-s|--save")]
+        public bool Save { get; init; }
 
         public override ValidationResult Validate()
         {
@@ -40,25 +45,30 @@ internal class PakInspectCommand : Command<PakInspectCommand.Settings>
             throw new Exception("Failed to parse head chunk");
         }
 
-            var headContent = Convert.ToBase64String(headChunk.Header);
-            AnsiConsole.Write(new Markup($"Pak header:\t[orange1]{headContent}[/]\n\n"));
+        var headContent = Convert.ToBase64String(headChunk.Header);
+        AnsiConsole.Write(new Markup($"Pak header:\t[orange1]{headContent}[/]\n\n"));
 
         if (file.Chunks.First(c => c.TypeId == Pak.Chunk.ChunkType.File).Body is not Pak.FileChunk fileChunk)
         {
             throw new Exception("Failed to parse file chunk");
         }
 
-            var files = PakUtils.GetFiles(fileChunk.Root, "").ToList();
-            AnsiConsole.Write(new Markup($"Pak contains [orange1]{files.Count}[/] file(s)\n\n"));
+        var files = PakUtils.GetFiles(fileChunk.Root, "").ToList();
+        AnsiConsole.Write(new Markup($"Pak contains [orange1]{files.Count}[/] file(s)\n\n"));
 
-            if (settings.ShowTree)
-            {
-                DisplayFileTree(name, fileChunk);
-            }
-            else
-            {
-                DisplayFileList(files, settings.ShowAllInfo);
-            }
+        if (settings.ShowTree)
+        {
+            DisplayFileTree(name, fileChunk);
+        }
+        else
+        {
+            DisplayFileList(files, settings.ShowAllInfo);
+        }
+
+        if (settings.Save)
+        {
+            SaveReport(name, new(headContent, files));
+        }
 
         return 0;
     }
@@ -104,6 +114,17 @@ internal class PakInspectCommand : Command<PakInspectCommand.Settings>
                 break;
         }
         parent.AddNode(node);
+    }
+
+    private static void SaveReport(string name, PakReport report)
+    {
+        using var output = File.Create($"{name}.json");
+        var options = new JsonSerializerOptions()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
+        };
+        JsonSerializer.Serialize(output, report, options);
     }
 
 }

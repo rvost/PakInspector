@@ -1,5 +1,7 @@
 ﻿using Spectre.Console;
 using Spectre.Console.Rendering;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace PakInspector.Data;
 
@@ -10,8 +12,10 @@ internal record PakFileEntry
     public uint Offset { get; init; }
     public uint CompressedLength { get; init; }
     public uint OriginalLength { get; init; }
+    [JsonConverter(typeof(BytesToHexJsonConverter))]
     public byte[] Unknown1 { get; init; }
     public uint CompressionType { get; init; }
+    [JsonConverter(typeof(BytesToHexJsonConverter))]
     public byte[] Unknown2 { get; init; }
 
     public PakFileEntry(string path, Pak.PakEntry.PakFileInfo info)
@@ -42,5 +46,18 @@ internal record PakFileEntry
         table.AddRow("unkn2", BitConverter.ToString(Unknown2));
         table.Expand();
         return table;
+    }
+}
+
+internal class BytesToHexJsonConverter : JsonConverter<byte[]>
+{
+    public override byte[]? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Write(Utf8JsonWriter writer, byte[] value, JsonSerializerOptions options)
+    {
+        JsonSerializer.Serialize(writer, BitConverter.ToString(value).Replace("-", ""), options);
     }
 }
