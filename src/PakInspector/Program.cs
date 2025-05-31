@@ -1,7 +1,14 @@
-﻿// See https://aka.ms/new-console-template for more information
-using PakInspector;
+﻿using PakInspector.Commands;
+using Spectre.Console.Cli;
 
-var file = Iff.FromFile(args[0]);
+var app = new CommandApp();
+app.Configure(config =>
+{
+    config.AddCommand<ChunksCommand>("chunks");
+#if DEBUG
+    config.PropagateExceptions();
+    config.ValidateExamples();
+#endif
+});
 
-Console.WriteLine(file.FormType);
-Console.WriteLine(file.Chunks.Count);
+app.Run(args);
