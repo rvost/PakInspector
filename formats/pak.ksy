@@ -19,7 +19,7 @@ types:
   chunk:
     seq:
       - id: type_id
-        type: u4le
+        type: u4le # use int32 representation for efficient comparison in the switch
         enum: chunk_type
       - id: length
         type: u4be
@@ -33,20 +33,14 @@ types:
             'chunk_type::file': file_chunk
             _ : raw_chunk
     enums:
-      chunk_type:
+      chunk_type: 
         0x44414548: head # HEAD
         0x41544144: data # DATA
         0x454C4946: file # FILE
   head_chunk:
     seq:
-      - id: unknown1
-        type: u4le
-      - id: unknown2
-        type: u4le
-      - id: key
-        size: 16
-      - id: unknown3
-        type: u4le
+      - id: header # probably contains checksum/signature
+        size-eos: true
   data_chunk:
     seq:
       - id: content
@@ -96,9 +90,10 @@ types:
             size: 4
         instances:
           data:
+            io: _root._io
             pos: offset
             size: compressed_length
-  raw_chunk:
+  raw_chunk: #distinguish from known chunks
     seq:
-      - id: content
+      - id: unknown
         size-eos: true

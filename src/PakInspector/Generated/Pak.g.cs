@@ -232,10 +232,11 @@ public partial class Pak : KaitaiStruct
                 {
                     if (f_data)
                         return _data;
-                    long _pos = m_io.Pos;
-                    m_io.Seek(Offset);
-                    _data = m_io.ReadBytes(CompressedLength);
-                    m_io.Seek(_pos);
+                    KaitaiStream io = M_Root.M_Io;
+                    long _pos = io.Pos;
+                    io.Seek(Offset);
+                    _data = io.ReadBytes(CompressedLength);
+                    io.Seek(_pos);
                     f_data = true;
                     return _data;
                 }
