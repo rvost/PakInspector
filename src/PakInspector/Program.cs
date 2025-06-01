@@ -6,6 +6,7 @@ app.Configure(config =>
 {
     config.AddCommand<ChunksCommand>("chunks");
     config.AddCommand<PakInspectCommand>("inspect");
+    config.AddCommand<PakExtractCommand>("extract");
 #if DEBUG
     config.PropagateExceptions();
     config.ValidateExamples();
