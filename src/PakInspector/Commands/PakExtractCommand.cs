@@ -35,7 +35,7 @@ internal class PakExtractCommand : Command<PakExtractCommand.Settings>
 
     public override int Execute(CommandContext context, Settings settings)
     {
-        var pak = Pak.FromFile(settings.FilePath);
+        var pak = AnsiConsole.Status().Start("Parsing .pak...", ctx => Pak.FromFile(settings.FilePath));
 
         var fileName = Path.GetFileNameWithoutExtension(settings.FilePath);
         var outputDir = string.IsNullOrEmpty(settings.OutputPath) ? fileName : settings.OutputPath;
@@ -45,7 +45,8 @@ internal class PakExtractCommand : Command<PakExtractCommand.Settings>
             throw new Exception("Failed to parse file chunk");
         }
 
-        var files = PakUtils.GetFiles(fileChunk.Root, "").ToDictionary(f => f.Path);
+        var files = AnsiConsole.Status()
+            .Start("Parsing file tree...", ctx => PakUtils.GetFiles(fileChunk.Root, "").ToDictionary(f => f.Path));
         List<PakFileEntry> filesToExtract = settings.Files is not null
             ? [.. settings.Files
                 .Where(f => files.ContainsKey(f))

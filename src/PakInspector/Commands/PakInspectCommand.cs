@@ -36,7 +36,7 @@ internal class PakInspectCommand : Command<PakInspectCommand.Settings>
 
     public override int Execute(CommandContext context, Settings settings)
     {
-        var file = Pak.FromFile(settings.FilePath);
+        var file = AnsiConsole.Status().Start("Parsing .pak...", ctx => Pak.FromFile(settings.FilePath));
 
         var name = Path.GetFileNameWithoutExtension(settings.FilePath);
 
@@ -53,7 +53,7 @@ internal class PakInspectCommand : Command<PakInspectCommand.Settings>
             throw new Exception("Failed to parse file chunk");
         }
 
-        var files = PakUtils.GetFiles(fileChunk.Root, "").ToList();
+        var files = AnsiConsole.Status().Start("Parsing file tree...", ctx => PakUtils.GetFiles(fileChunk.Root, "").ToList());
         AnsiConsole.Write(new Markup($"Pak contains [orange1]{files.Count}[/] file(s)\n\n"));
 
         if (settings.ShowTree)
@@ -67,7 +67,7 @@ internal class PakInspectCommand : Command<PakInspectCommand.Settings>
 
         if (settings.Save)
         {
-            SaveReport(name, new(headContent, files));
+            AnsiConsole.Status().Start("Saving inspection results...", ctx => SaveReport(name, new(headContent, files)));
         }
 
         return 0;
