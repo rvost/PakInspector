@@ -26,6 +26,11 @@ internal class PakInspectCommand : Command<PakInspectCommand.Settings>
         [CommandOption("-s|--save")]
         public bool Save { get; init; }
 
+        [Description("Do not print to the console")]
+        [CommandOption("-q|--quiet")]
+        public bool Quiet { get; init; }
+
+
         public override ValidationResult Validate()
         {
             return Path.Exists(FilePath)
@@ -46,7 +51,10 @@ internal class PakInspectCommand : Command<PakInspectCommand.Settings>
         }
 
         var headContent = Convert.ToBase64String(headChunk.Header);
-        AnsiConsole.Write(new Markup($"Pak header:\t[orange1]{headContent}[/]\n\n"));
+        if (!settings.Quiet)
+        {
+            AnsiConsole.Write(new Markup($"Pak header:\t[orange1]{headContent}[/]\n\n"));
+        }
 
         if (file.Chunks.First(c => c.TypeId == Pak.Chunk.ChunkType.File).Body is not Pak.FileChunk fileChunk)
         {
@@ -56,13 +64,16 @@ internal class PakInspectCommand : Command<PakInspectCommand.Settings>
         var files = AnsiConsole.Status().Start("Parsing file tree...", ctx => PakUtils.GetFiles(fileChunk.Root, "").ToList());
         AnsiConsole.Write(new Markup($"Pak contains [orange1]{files.Count}[/] file(s)\n\n"));
 
-        if (settings.ShowTree)
+        if (!settings.Quiet)
         {
-            DisplayFileTree(name, fileChunk);
-        }
-        else
-        {
-            DisplayFileList(files, settings.ShowAllInfo);
+            if (settings.ShowTree)
+            {
+                DisplayFileTree(name, fileChunk);
+            }
+            else
+            {
+                DisplayFileList(files, settings.ShowAllInfo);
+            }
         }
 
         if (settings.Save)
