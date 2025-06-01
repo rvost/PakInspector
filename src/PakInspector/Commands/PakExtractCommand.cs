@@ -22,6 +22,9 @@ internal class PakExtractCommand : Command<PakExtractCommand.Settings>
         [CommandOption("-f|--file <VALUES>")]
         public string[]? Files { get; init; }
 
+        [Description("Extract files without processing.")]
+        [CommandOption("-r|--raw")]
+        public bool CopyRaw { get; init; }
         public override ValidationResult Validate()
         {
             return Path.Exists(FilePath)
@@ -49,12 +52,12 @@ internal class PakExtractCommand : Command<PakExtractCommand.Settings>
                 .Select(f => files[f])]
             : [.. files.Values];
 
-        ExtractFiles(outputDir, filesToExtract);
+        ExtractFiles(outputDir, filesToExtract, settings.CopyRaw);
 
         return 0;
     }
 
-    private static void ExtractFiles(string outputDir, List<PakFileEntry> files)
+    private static void ExtractFiles(string outputDir, List<PakFileEntry> files, bool copyRaw)
     {
         var progress = AnsiConsole.Progress()
                     .HideCompleted(false)
@@ -71,14 +74,14 @@ internal class PakExtractCommand : Command<PakExtractCommand.Settings>
 
             foreach (var file in files)
             {
-                ExtractFile(outputDir, file);
+                ExtractFile(outputDir, file, copyRaw);
                 task.Increment(1);
             }
 
         });
     }
 
-    private static void ExtractFile(string outputDir, PakFileEntry file)
+    private static void ExtractFile(string outputDir, PakFileEntry file, bool copyRaw)
     {
         var folder = Path.GetDirectoryName(file.Path);
         var fileName = Path.GetFileName(file.Path);
@@ -87,16 +90,23 @@ internal class PakExtractCommand : Command<PakExtractCommand.Settings>
         Directory.CreateDirectory(fullPath);
         using var output = File.Create(Path.Combine(fullPath, fileName));
 
-        switch (file.CompressionType)
+        if (copyRaw)
         {
-            case 0:
-                WriteUncompressedFile(output, file);
-                break;
-            case 0x106: //  File is compressed using the DEFLATE algorithm
-                WriteZLibCompressedFile(output, file);
-                break;
-            default:
-                throw new Exception($"Unknown compression type: ${file.CompressionType}");
+            WriteUncompressedFile(output, file);
+        }
+        else
+        {
+            switch (file.CompressionType)
+            {
+                case 0:
+                    WriteUncompressedFile(output, file);
+                    break;
+                case 0x106: //  File is compressed using the DEFLATE algorithm
+                    WriteZLibCompressedFile(output, file);
+                    break;
+                default:
+                    throw new Exception($"Unknown compression type: ${file.CompressionType} in file ${file.Path}");
+            }
         }
     }
 
