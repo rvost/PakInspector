@@ -18,6 +18,10 @@ internal class PakExtractCommand : Command<PakExtractCommand.Settings>
         [CommandArgument(1, "[outputDir]")]
         public string? OutputPath { get; init; }
 
+        [Description("Files to extract. Use paths as specified in inspection results.")]
+        [CommandOption("-f|--file <VALUES>")]
+        public string[]? Files { get; init; }
+
         public override ValidationResult Validate()
         {
             return Path.Exists(FilePath)
@@ -38,27 +42,40 @@ internal class PakExtractCommand : Command<PakExtractCommand.Settings>
             throw new Exception("Failed to parse file chunk");
         }
 
+        var files = PakUtils.GetFiles(fileChunk.Root, "").ToDictionary(f => f.Path);
+        List<PakFileEntry> filesToExtract = settings.Files is not null
+            ? [.. settings.Files
+                .Where(f => files.ContainsKey(f))
+                .Select(f => files[f])]
+            : [.. files.Values];
+
+        ExtractFiles(outputDir, filesToExtract);
+
+        return 0;
+    }
+
+    private static void ExtractFiles(string outputDir, List<PakFileEntry> files)
+    {
         var progress = AnsiConsole.Progress()
-            .HideCompleted(true)
-            .Columns([
-                new TaskDescriptionColumn(),
-                new ProgressBarColumn(),
-                new PercentageColumn(),
-                new SpinnerColumn()
-            ]);
+                    .HideCompleted(false)
+                    .Columns([
+                        new TaskDescriptionColumn(),
+                        new ProgressBarColumn(),
+                        new PercentageColumn(),
+                        new SpinnerColumn()
+                    ]);
+
         progress.Start(ctx =>
         {
-            var files = PakUtils.GetFiles(fileChunk.Root, "").ToList();
-            var task = new ProgressTask(0, "Extracting Files", maxValue: files.Count);
+            var task = ctx.AddTask("Extracting Files", maxValue: files.Count);
 
             foreach (var file in files)
             {
                 ExtractFile(outputDir, file);
                 task.Increment(1);
             }
-            
+
         });
-        return 0;
     }
 
     private static void ExtractFile(string outputDir, PakFileEntry file)
@@ -75,7 +92,7 @@ internal class PakExtractCommand : Command<PakExtractCommand.Settings>
             case 0:
                 WriteUncompressedFile(output, file);
                 break;
-            case 0x106:
+            case 0x106: //  File is compressed using the DEFLATE algorithm
                 WriteZLibCompressedFile(output, file);
                 break;
             default:
@@ -91,7 +108,7 @@ internal class PakExtractCommand : Command<PakExtractCommand.Settings>
 
     private static void WriteZLibCompressedFile(FileStream output, PakFileEntry file)
     {
-        using var compressed = new MemoryStream(file.Data[2..]); // skip zlib header
+        using var compressed = new MemoryStream(file.Data[2..]); // Skip zlib header
         using var deflate = new DeflateStream(compressed, CompressionMode.Decompress);
         deflate.CopyTo(output);
     }
