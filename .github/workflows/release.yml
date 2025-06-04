@@ -1,0 +1,36 @@
+name: "Release"
+
+on:
+  push:
+    tags:
+      - "*.*.*"
+
+env:
+  PROJECT_PATH: PakInspector.sln
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore ${{ env.PROJECT_PATH }}
+
+      - name: Publish
+        run: >
+          dotnet publish ${{ env.PROJECT_PATH }} -c Release -o ".\publish" -r win-x64 --no-restore
+
+      - name: Create release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          draft: true
+          files: |
+            publish/*.exe
