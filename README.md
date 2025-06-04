@@ -55,6 +55,10 @@ You can also use the `--help` key to view all the available commands and options
 
 If you find a bug or have a feature request, please use [Issues](https://github.com/rvost/PakInspector/issues) to report it. Samples of the `.pak` files that the tool fails to extract are needed. If you have encountered this problem, please post your *inspection results* in the Issues or send me a message on Discord.
 
+### Known issues
+
+As the current POC implementation prioritizes the ease of development and clarity provided by Kaitai Struct over parser performance, high RAM usage is expected. RAM usage for inspection and extraction operations is expected to be 2–3 times that of the `.pak` file.
+
 ## Contribution
 
 All contributions are welcome! If you have any plans for improving the parser, please use the `formats/pak.ksy` file as a starting point and avoid modifying the *generated* parser code.

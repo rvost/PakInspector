@@ -18,7 +18,7 @@ internal record PakFileEntry
     [JsonConverter(typeof(BytesToHexJsonConverter))]
     public byte[] Unknown2 { get; init; }
     [JsonIgnore]
-    public byte[] Data { get; init; }
+    public Lazy<byte[]> Data { get; init; }
 
     public PakFileEntry(string path, Pak.PakEntry.PakFileInfo info)
     {
@@ -29,7 +29,7 @@ internal record PakFileEntry
         Unknown1 = info.Unknown1;
         CompressionType = info.CompressionType;
         Unknown2 = info.Unknown2;
-        Data = info.Data;
+        Data = new(() => info.Data);
     }
 
     public IRenderable GetShortInfo() => new TextPath(Path)

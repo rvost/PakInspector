@@ -113,13 +113,13 @@ internal class PakExtractCommand : Command<PakExtractCommand.Settings>
 
     private static void WriteUncompressedFile(FileStream output, PakFileEntry file)
     {
-        using var input = new MemoryStream(file.Data);
+        using var input = new MemoryStream(file.Data.Value);
         input.CopyTo(output);
     }
 
     private static void WriteZLibCompressedFile(FileStream output, PakFileEntry file)
     {
-        using var compressed = new MemoryStream(file.Data[2..]); // Skip zlib header
+        using var compressed = new MemoryStream(file.Data.Value[2..]); // Skip zlib header
         using var deflate = new DeflateStream(compressed, CompressionMode.Decompress);
         deflate.CopyTo(output);
     }
