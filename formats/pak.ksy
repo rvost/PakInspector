@@ -42,8 +42,9 @@ types:
       - id: header # probably contains checksum/signature
         size-eos: true
   data_chunk:
-    seq:
-      - id: content
+    instances:
+      content:
+        pos: 0
         size-eos: true
   file_chunk:
     seq:
@@ -94,6 +95,7 @@ types:
             pos: offset
             size: compressed_length
   raw_chunk: #distinguish from known chunks
-    seq:
-      - id: unknown
+    instances:
+      unknown:
+        pos: 0
         size-eos: true

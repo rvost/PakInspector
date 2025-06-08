@@ -282,16 +282,30 @@ public partial class Pak : KaitaiStruct
         {
             m_parent = p__parent;
             m_root = p__root;
+            f_unknown = false;
             _read();
         }
         private void _read()
         {
-            _unknown = m_io.ReadBytesFull();
         }
+        private bool f_unknown;
         private byte[] _unknown;
+        public byte[] Unknown
+        {
+            get
+            {
+                if (f_unknown)
+                    return _unknown;
+                long _pos = m_io.Pos;
+                m_io.Seek(0);
+                _unknown = m_io.ReadBytesFull();
+                m_io.Seek(_pos);
+                f_unknown = true;
+                return _unknown;
+            }
+        }
         private Pak m_root;
         private Pak.Chunk m_parent;
-        public byte[] Unknown { get { return _unknown; } }
         public Pak M_Root { get { return m_root; } }
         public Pak.Chunk M_Parent { get { return m_parent; } }
     }
@@ -306,16 +320,30 @@ public partial class Pak : KaitaiStruct
         {
             m_parent = p__parent;
             m_root = p__root;
+            f_content = false;
             _read();
         }
         private void _read()
         {
-            _content = m_io.ReadBytesFull();
         }
+        private bool f_content;
         private byte[] _content;
+        public byte[] Content
+        {
+            get
+            {
+                if (f_content)
+                    return _content;
+                long _pos = m_io.Pos;
+                m_io.Seek(0);
+                _content = m_io.ReadBytesFull();
+                m_io.Seek(_pos);
+                f_content = true;
+                return _content;
+            }
+        }
         private Pak m_root;
         private Pak.Chunk m_parent;
-        public byte[] Content { get { return _content; } }
         public Pak M_Root { get { return m_root; } }
         public Pak.Chunk M_Parent { get { return m_parent; } }
     }

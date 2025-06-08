@@ -57,7 +57,8 @@ If you find a bug or have a feature request, please use [Issues](https://github.
 
 ### Known issues
 
-As the current POC implementation prioritizes the ease of development and clarity provided by Kaitai Struct over parser performance, high RAM usage is expected. RAM usage for inspection and extraction operations is expected to be 2–3 times that of the `.pak` file.
+As the current POC implementation prioritizes the ease of development and clarity provided by Kaitai Struct over parser performance, high RAM usage is expected. 
+RAM usage for inspection and extraction operations is comparable to the size of the `.pak` file.
 
 ## Contribution
 
